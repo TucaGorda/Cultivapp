@@ -180,7 +180,6 @@ with col_main:
                 with col_e1:
                     if st.button("💾 Actualizar", use_container_width=True):
                         if texto_nuevo.strip() == "":
-  
     elif st.session_state.menu_action == "editar":
         st.markdown("### 📝 Modificar o Eliminar Tareas")
         fecha_edit = st.date_input("Fecha a modificar:", datetime.date(2026, 9, 16))
