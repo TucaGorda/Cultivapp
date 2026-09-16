@@ -15,7 +15,7 @@ def cargar_datos():
                 for k, v in data.get("bitacora", {}).items():
                     fecha_obj = datetime.datetime.strptime(k, "%Y-%m-%d").date()
                     bitacora_convertida[fecha_obj] = v
-                data["bitacora"] = bitacora_convertida
+                data["bitacora"] = bitacora_convertconvertida
                 return data
         except:
             return {"config": {}, "bitacora": {}, "fase": "Vegetativo"}
@@ -55,18 +55,19 @@ st.markdown("""
 
 if not st.session_state.ver_calendario:
     st.markdown("### 🪴 Configuración del Cultivo (Alpha 3)")
-    
     col_ini1, col_ini2 = st.columns(2)
     with col_ini1:
         st.markdown("#### ➕ Crear Nuevo Calendario")
         maceta = st.selectbox("Maceta:", ["3L", "5L", "7L", "10L", "15L", "20L"], index=3)
         sustrato = st.selectbox("Sustrato:", ["Cultivate", "Treemix", "Casero"])
         raza = st.selectbox("Raza:", ["Tangie", "Gorilla Ghost"])
-        potencia = st.text_input("Luz:", value="LED 350W")
+        # Nuevos parámetros solicitados de iluminación
+        tipo_luz = st.selectbox("Tipo de luz:", ["Led", "Sodio", "Mercurio"])
+        potencia = st.selectbox("Potencia (W):", ["150", "200", "250", "300", "350", "400"], index=4)
         usar_esquejes = st.checkbox("Incluir sección de esquejes", value=True)
         if st.button("💾 Inicializar e Ingresar", use_container_width=True):
-            st.session_state.config = {"maceta": maceta, "sustrato": sustrato, "raza": raza, "potencia": potencia, "usar_esquejes": usar_esquejes}
-            st.session_state.bitacora = {}  # REGLA 1: Arranca 100% vacío sin tareas viejas
+            st.session_state.config = {"maceta": maceta, "sustrato": sustrato, "raza": raza, "tipo_luz": tipo_luz, "potencia": potencia, "usar_esquejes": usar_esquejes}
+            st.session_state.bitacora = {}
             st.session_state.ver_calendario = True
             guardar_datos()
             st.rerun()
@@ -75,41 +76,35 @@ if not st.session_state.ver_calendario:
         st.markdown("#### 📂 Cultivo Guardado en Memoria")
         if st.session_state.config:
             st.info(f"Se detectó un cultivo activo de: **{st.session_state.config['raza']}**")
-            col_g1, col_g2 = st.columns([3, 1])
+            col_g1, col_g2 = st.columns()
             with col_g1:
                 if st.button(f"🚀 Entrar a {st.session_state.config['raza']}", use_container_width=True):
                     st.session_state.ver_calendario = True
                     st.rerun()
             with col_g2:
-                if st.button("❌", help="Eliminar este calendario permanentemente"):
+                if st.button("❌", help="Eliminar este calendario"):
                     st.session_state.menu_action = "confirmar_borrado"
-                    
             if "menu_action" in st.session_state and st.session_state.menu_action == "confirmar_borrado":
-                st.warning("⚠️ ¿Estás seguro de que deseas BORRAR toda la bitácora? Esta acción no se puede deshacer.")
+                st.warning("⚠️ ¿Borrar toda la bitácora?")
                 col_conf1, col_conf2 = st.columns(2)
                 with col_conf1:
                     if st.button("💥 SÍ, BORRAR", use_container_width=True):
-                        st.session_state.config = {}
-                        st.session_state.bitacora = {}
-                        st.session_state.fase = "Vegetativo"
-                        st.session_state.menu_action = None
+                        st.session_state.config = {}; st.session_state.bitacora = {}; st.session_state.fase = "Vegetativo"; st.session_state.menu_action = None
                         if os.path.exists(DB_FILE): os.remove(DB_FILE)
-                        st.success("Cultivo eliminado.")
-                        st.rerun()
+                        st.success("Cultivo eliminado."); st.rerun()
                 with col_conf2:
                     if st.button("Cancelar", use_container_width=True):
-                        st.session_state.menu_action = None
-                        st.rerun()
-        else:
-            st.caption("No hay ningún calendario guardado en el archivo local.")
+                        st.session_state.menu_action = None; st.rerun()
+        else: st.caption("No hay ningún calendario guardado.")
     st.stop()
 
-col_menu, col_main = st.columns(2)
+# CORREGIDO: Se reestablece la proporción estricta de pantalla a 20/80 (Menú corto, Calendario ancho)
+col_menu, col_main = st.columns([1, 4])
 
 with col_menu:
     st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza']}</div>", unsafe_allow_html=True)
-    
-    if st.button("⬅️ Inicio ( Flecha Atrás )", use_container_width=True):
+    # CORREGIDO: Texto simplificado a sólo "Inicio"
+    if st.button("🏠 Inicio", use_container_width=True):
         st.session_state.ver_calendario = False
         st.rerun()
     st.write("---")
@@ -120,19 +115,12 @@ with col_menu:
     if st.button("📖 Info Raza", use_container_width=True):
         st.session_state.menu_action = "info"
     st.write("---")
-    
     st.markdown(f"**Fase:** {st.session_state.fase}")
     if st.button("⏱️ Alternar Veg/Flora", use_container_width=True):
         st.session_state.fase = "Floración" if st.session_state.fase == "Vegetativo" else "Vegetativo"
-        guardar_datos()
-        st.rerun()
-        
-    # REGLA 2: Recuadro gris fijo con el indicador de fotoperiodo restablecido
-    if st.session_state.fase == "Vegetativo":
-        st.code("18 hs LUZ / 6 hs OFF")
-    else:
-        st.code("12 hs LUZ / 12 hs OFF")
-    
+        guardar_datos(); st.rerun()
+    if st.session_state.fase == "Vegetativo": st.code("18 hs LUZ / 6 hs OFF")
+    else: st.code("12 hs LUZ / 12 hs OFF")
     now_utc = datetime.datetime.utcnow()
     now = now_utc - datetime.timedelta(hours=3)
     st.caption(f"🕒 {now.strftime('%H:%M')} ART")
@@ -141,17 +129,27 @@ with col_main:
     if st.session_state.menu_action == "info":
         st.markdown("### 📖 Manual Técnico: Parámetros y Clima")
         if st.session_state.config["raza"] == "Tangie":
+            st.write("**Variedad:** Tangie | **Ciclo total:** 9 Semanas")
             litros_num = float(st.session_state.config["maceta"].replace("L", ""))
             agua_veg, agua_flo1, agua_flo2 = litros_num * 0.10, litros_num * 0.10, litros_num * 0.15
+            
+            # Algoritmo agronómico automático para calcular la distancia de seguridad de la lámpara
+            t_luz = st.session_state.config.get("tipo_luz", "Led")
+            pot = int(st.session_state.config.get("potencia", "350"))
+            if t_luz == "Led": dist_lamp = "30 a 40 cm" if pot >= 300 else "25 a 30 cm"
+            elif t_luz == "Sodio": dist_lamp = "40 a 50 cm" if pot >= 300 else "30 a 40 cm"
+            else: dist_lamp = "45 a 55 cm" if pot >= 300 else "35 a 45 cm"
+            
             tab_veg, tab_flo = st.tabs(["🌱 VEGETATIVO", "🟣 FLORACIÓN (9 Semanas)"])
             with tab_veg:
-                st.write(f"**Clima Ideal:** Temp: 24°C - 28°C | Humedad: 55% - 70%")
+                st.write("**Clima Ideal:** Temp: 24°C - 28°C | Humedad: 55% - 70%")
+                st.write(f"- **Distancia de Luz Sugerida ({t_luz} {pot}W):** A {dist_lamp} de las puntas.")
                 st.write(f"- **Agua (10%):** {agua_veg:.1f}L por planta.\n- **pH:** 6.0-6.2 | **EC:** 1.0-1.4\n- **Nutrientes:** N + Microvida + Melaza.")
             with tab_flo:
-                st.write(f"**Semanas 1-4 (Estiramiento):**\n- **Clima Ideal:** Temp: 23°C - 27°C | Humedad: 50% - 60%")
+                st.write("**Semanas 1-4 (Estiramiento):**\n- **Clima Ideal:** Temp: 23°C - 27°C | Humedad: 50% - 60%")
                 st.write(f"- **Agua (10%):** {agua_flo1:.1f}L\n- **pH:** 6.2 | **EC:** 1.1-1.3\n- **Nutrientes:** Mínimo N + P + K + Melaza.")
                 st.write(f"**Semanas 5-9 (Engorde):**\n- **Clima Ideal:** Temp: 20°C - 25°C | Humedad: 40% - 50%")
-                st.write(f"- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza (Lavar en Sem 8).")
+                st.write(f"- **Distancia de Luz Sugerida:** A {dist_lamp} de las puntas.\n- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza (Lavar en Sem 8).")
         if st.button("❌ Cerrar Info", use_container_width=True):
             st.session_state.menu_action = None; st.rerun()
 
@@ -173,8 +171,7 @@ with col_main:
                         if texto_nuevo.strip() == "":
                             st.session_state.bitacora[fecha_edit][lista_target].pop(idx_tarea)
                             st.session_state.bitacora[fecha_edit][done_target].pop(idx_tarea)
-                        else:
-                            st.session_state.bitacora[fecha_edit][lista_target][idx_tarea] = texto_nuevo
+                        else: st.session_state.bitacora[fecha_edit][lista_target][idx_tarea] = texto_nuevo
                         guardar_datos(); st.rerun()
                 with col_e2:
                     if st.button("❌ Cancelar", use_container_width=True):
@@ -213,7 +210,6 @@ with col_main:
     dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
     for idx, nombre_dia in enumerate(dias_semana):
         cols_dias[idx].markdown(f"<p style='text-align:center; font-weight:600; margin-bottom:5px;'>{nombre_dia}</p>", unsafe_allow_html=True)
-    
     accent_color_fase = "#A5D6A7" if st.session_state.fase == "Vegetativo" else "#CE93D8"
     for idx, fecha in enumerate(dias_septiembre):
         col_target = cols_dias[idx % 7]
