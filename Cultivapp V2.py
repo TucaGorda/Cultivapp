@@ -96,7 +96,8 @@ if not st.session_state.ver_calendario:
         else: st.caption("No hay ningún calendario guardado.")
     st.stop()
 
-col_menu, col_main = st.columns()
+# CORREGIDO: Se aplica la lista [1, 4] para fijar la proporción estricta 20/80 en pantalla
+col_menu, col_main = st.columns([1, 4])
 
 with col_menu:
     st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza']}</div>", unsafe_allow_html=True)
@@ -143,10 +144,11 @@ with col_main:
             st.write(f"- **Distancia Luz ({t_luz} {pot}W):** A {dist_lamp} de las puntas.")
             st.write(f"- **Agua (10%):** {agua_veg:.1f}L\n- **pH:** 6.0-6.2 | **EC:** 1.0-1.4\n- **Nutrientes:** N + Microvida + Melaza.")
         with tab_flo:
-            sem_f = "1-4" if raza_act == "Tangie" else "1-4"
+            sem_f = "1-4"
             sem_e = "5-9" if raza_act == "Tangie" else "5-8"
             st.write(f"**Semanas {sem_f} (Stretch):**\n- **Clima:** Temp: 23°C-27°C | Humedad: 50%-60%\n- **Agua (10%):** {agua_flo1:.1f}L\n- **pH:** 6.2 | **EC:** 1.1-1.3\n- **Nutrientes:** Mínimo N + P + K + Melaza.")
-            st.write(f"**Semanas {sem_e} (Engorde):**\n- **Clima:** Temp: 20°C-25°C | Humedad: 40%-50%\n- **Distancia Luz:** A {dist_lamp} de las puntas.\n- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza.")
+            st.write(f"**Semanas {sem_e} (Engorde):**\n- **Clima:** Temp: 20°C-25°C | Humedad: 40%-50%")
+            st.write(f"- **Distancia Luz:** A {dist_lamp} de las puntas.\n- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza.")
         if st.button("❌ Cerrar Info", use_container_width=True):
             st.session_state.menu_action = None; st.rerun()
 
@@ -237,9 +239,9 @@ with col_main:
     for idx, nombre_dia in enumerate(dias_semana):
         cols_header[idx].markdown(f"<p style='text-align:center; font-weight:600; margin-bottom:5px;'>{nombre_dia}</p>", unsafe_allow_html=True)
     
-    for semana in semanas_mes:
+    for b_semana in semanas_mes:
         cols_dias = st.columns(7)
-        for idx, fecha in enumerate(semana):
+        for idx, fecha in enumerate(b_semana):
             col_target = cols_dias[idx]
             if fecha.month == hoy.month:
                 tiene_tarea = fecha in st.session_state.bitacora and (len(st.session_state.bitacora[fecha].get("tareas_madre", [])) > 0 or len(st.session_state.bitacora[fecha].get("tareas_esqueje", [])) > 0)
@@ -247,8 +249,8 @@ with col_main:
                 with col_target:
                     if st.button(f"{fecha.day}", key=f"day_{fecha.day}_{fecha.month}_{idx}", use_container_width=True):
                         st.session_state.selected_date = fecha
-                    if tiene_tarea: st.markdown(f"<div style='background-color:#A5D6A7; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
-                    elif tiene_medicion: st.markdown(f"<div style='background-color:#BBDEFB; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
+                    if tiene_tarea: st.markdown("<div style='background-color:#A5D6A7; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
+                    elif tiene_medicion: st.markdown("<div style='background-color:#BBDEFB; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
                     else: st.markdown("<div style='height:5px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
             else:
                 with col_target: st.write("")
