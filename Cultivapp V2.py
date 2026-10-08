@@ -4,7 +4,7 @@ import calendar
 import json
 import os
 
-st.set_page_config(layout="wide", page_title="Cultivapp Alpha 4.2")
+st.set_page_config(layout="wide", page_title="Cultivapp Alpha 5.0")
 DB_FILE = "cultivapp_data.json"
 
 def cargar_datos():
@@ -44,6 +44,8 @@ if "menu_action" not in st.session_state:
     st.session_state.menu_action = None
 if "ver_calendario" not in st.session_state:
     st.session_state.ver_calendario = False if not st.session_state.config else True
+if "idx_tarea_editar" not in st.session_state:
+    st.session_state.idx_tarea_editar = None
 
 st.markdown("""
     <style>
@@ -55,7 +57,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if not st.session_state.ver_calendario:
-    st.markdown("### 🪴 Configuración del Cultivo (Alpha 4.2)")
+    st.markdown("### 🪴 Configuración del Cultivo (Alpha 5.0)")
     col_ini1, col_ini2 = st.columns(2)
     with col_ini1:
         st.markdown("#### ➕ Crear Nuevo Calendario")
@@ -96,24 +98,26 @@ if not st.session_state.ver_calendario:
         else: st.caption("No hay ningún calendario guardado.")
     st.stop()
 
-col_menu, col_main = st.columns([2, 8])
+# Proporción fija 20/80 para el panel principal
+col_menu, col_main = st.columns([1, 4])
 
 with col_menu:
-    st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza']}</div>", unsafe_allow_html=True)
-    if st.button("🏠 Inicio", use_container_width=True):
+    st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza'].upper()}</div>", unsafe_allow_html=True)
+    if st.button("🏠 INICIO", use_container_width=True):
         st.session_state.ver_calendario = False; st.rerun()
     st.write("---")
-    if st.button("✏️ Planificar Tarea", use_container_width=True):
+    # CORREGIDO: Botones transformados a IMPRENTA MAYÚSCULA
+    if st.button("✏️ PLANIFICAR TAREA", use_container_width=True):
         st.session_state.menu_action = "planificar"
-    if st.button("📝 Editar Tareas", use_container_width=True):
-        st.session_state.menu_action = "editar"
-    if st.button("📊 Reg. Mediciones", use_container_width=True):
+    if st.button("📝 EDITAR TAREA", use_container_width=True):
+        st.session_state.menu_action = "editar"; st.session_state.idx_tarea_editar = None
+    if st.button("📊 REGISTRO", use_container_width=True):
         st.session_state.menu_action = "mediciones"
-    if st.button("📖 Info Raza", use_container_width=True):
+    if st.button("📖 INFO RAZA", use_container_width=True):
         st.session_state.menu_action = "info"
     st.write("---")
-    st.markdown(f"**Fase:** {st.session_state.fase}")
-    if st.button("⏱️ Alternar Veg/Flora", use_container_width=True):
+    st.markdown(f"**FASE:** {st.session_state.fase.upper()}")
+    if st.button("⏱️ ALTERNAR VEG/FLORA", use_container_width=True):
         st.session_state.fase = "Floración" if st.session_state.fase == "Vegetativo" else "Vegetativo"
         guardar_datos(); st.rerun()
     if st.session_state.fase == "Vegetativo": st.code("18 hs LUZ / 6 hs OFF")
@@ -124,10 +128,10 @@ with col_menu:
 
 with col_main:
     if st.session_state.menu_action == "info":
-        st.markdown("### 📖 Manual Técnico: Parámetros y Clima")
+        st.markdown("### 📖 MANUAL TÉCNICO: PARAMETROS Y CLIMA")
         raza_act = st.session_state.config["raza"]
-        if raza_act == "Tangie": st.write("**Variedad:** Tangie | **Ciclo:** 9 Semanas")
-        else: st.write("**Variedad:** Gorilla Ghost | **Ciclo:** 8 Semanas")
+        if raza_act == "Tangie": st.write("**VARIEDAD:** TANGIE | **CICLO:** 9 SEMANAS")
+        else: st.write("**VARIEDAD:** GORILLA GHOST | **CICLO:** 8 SEMANAS")
         
         litros_num = float(st.session_state.config["maceta"].replace("L", ""))
         agua_veg, agua_flo1, agua_flo2 = litros_num * 0.10, litros_num * 0.10, litros_num * 0.15
@@ -139,22 +143,23 @@ with col_main:
         
         tab_veg, tab_flo = st.tabs(["🌱 VEGETATIVO", "🟣 FLORACIÓN"])
         with tab_veg:
-            st.write("**Clima:** Temp: 24°C-28°C | Humedad: 55%-70%")
-            st.write(f"- **Distancia Luz ({t_luz} {pot}W):** A {dist_lamp} de las puntas.")
-            st.write(f"- **Agua (10%):** {agua_veg:.1f}L\n- **pH:** 6.0-6.2 | **EC:** 1.0-1.4\n- **Nutrientes:** N + Microvida + Melaza.")
+            st.write("**CLIMA:** TEMP: 24°C-28°C | HUMEDAD: 55%-70%")
+            st.write(f"- **DISTANCIA LUZ ({t_luz.upper()} {pot}W):** A {dist_lamp} DE LAS PUNTAS.")
+            st.write(f"- **AGUA (10%):** {agua_veg:.1f}L\n- **pH:** 6.0-6.2 | **EC:** 1.0-1.4\n- **NUTRIENTES:** N + MICROVIDA + MELAZA.")
         with tab_flo:
             sem_f = "1-4"
             sem_e = "5-9" if raza_act == "Tangie" else "5-8"
-            st.write(f"**Semanas {sem_f} (Stretch):**\n- **Clima:** Temp: 23°C-27°C | Humedad: 50%-60%\n- **Agua (10%):** {agua_flo1:.1f}L\n- **pH:** 6.2 | **EC:** 1.1-1.3\n- **Nutrientes:** Mínimo N + P + K + Melaza.")
-            st.write(f"**Semanas {sem_e} (Engorde):**\n- **Clima:** Temp: 20°C-25°C | Humedad: 40%-50%")
-            st.write(f"- **Distancia Luz:** A {dist_lamp} de las puntas.\n- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza.")
-        if st.button("❌ Cerrar Info", use_container_width=True):
+            st.write(f"**SEMANAS {sem_f} (STRETCH):**\n- **CLIMA:** TEMP: 23°C-27°C | HUMEDAD: 50%-60%\n- **AGUA (10%):** {agua_flo1:.1f}L\n- **pH:** 6.2 | **EC:** 1.1-1.3\n- **NUTRIENTES:** MÍNIMO N + P + K + MELAZA.")
+            st.write(f"**SEMANAS {sem_e} (ENGORDE):**\n- **CLIMA:** TEMP: 20°C-25°C | HUMEDAD: 40%-50%")
+            st.write(f"- **DISTANCIA LUZ:** A {dist_lamp} DE LAS PUNTAS.\n- **AGUA (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **NUTRIENTES:** MÁXIMO P + K + MELAZA.")
+        if st.button("❌ CERRAR INFO", use_container_width=True):
             st.session_state.menu_action = None; st.rerun()
 
     elif st.session_state.menu_action == "mediciones":
-        st.markdown("### 📊 Registro de Mediciones (Modo Bitácora)")
-        # Sincronizado dinámicamente con el día clickeado del calendario
-        fecha_med = st.date_input("Fecha de medición:", value=st.session_state.selected_date)
+        st.markdown("### 📊 REGISTRO DE MEDICIONES (MODO BITÁCORA)")
+        # CORREGIDO: Se elimina la caja de fecha horizontal, se usa texto limpio
+        st.markdown(f"**SECCIÓN SELECCIONADA:** {st.session_state.selected_date.strftime('%d/%m/%Y')}")
+        fecha_med = st.session_state.selected_date
         
         med_existente = fecha_med in st.session_state.bitacora and "ph_in" in st.session_state.bitacora[fecha_med]
         med = st.session_state.bitacora[fecha_med] if fecha_med in st.session_state.bitacora else {}
@@ -169,7 +174,7 @@ with col_main:
             
         col_sm1, col_sm2 = st.columns(2)
         with col_sm1:
-            if st.button("💾 Guardar Mediciones", use_container_width=True):
+            if st.button("💾 GUARDAR MEDICIONES", use_container_width=True):
                 if fecha_med not in st.session_state.bitacora:
                     st.session_state.bitacora[fecha_med] = {"tareas_madre": [], "tareas_esqueje": [], "done_m": [], "done_e": []}
                 st.session_state.bitacora[fecha_med]["ph_in"] = ph_in; st.session_state.bitacora[fecha_med]["ph_out"] = ph_out
@@ -177,55 +182,31 @@ with col_main:
                 guardar_datos(); st.success("¡Mediciones guardadas!"); st.rerun()
         with col_sm2:
             if med_existente:
-                if st.button("💥 Eliminar Registro", use_container_width=True):
+                if st.button("💥 ELIMINAR REGISTRO", use_container_width=True):
                     for k in ["ph_in", "ph_out", "ec_in", "ec_out"]:
                         if k in st.session_state.bitacora[fecha_med]: del st.session_state.bitacora[fecha_med][k]
                     if not st.session_state.bitacora[fecha_med].get("tareas_madre") and not st.session_state.bitacora[fecha_med].get("tareas_esqueje"):
                         del st.session_state.bitacora[fecha_med]
                     guardar_datos(); st.success("¡Mediciones eliminadas!"); st.rerun()
             else:
-                if st.button("❌ Cerrar", key="c_med", use_container_width=True):
+                if st.button("❌ CERRAR", key="c_med", use_container_width=True):
                     st.session_state.menu_action = None; st.rerun()
         st.write("---")
 
-    elif st.session_state.menu_action == "editar":
-        st.markdown("### 📝 Modificar o Eliminar Tarea")
-        fecha_edit = st.date_input("Fecha:", value=st.session_state.selected_date)
-        if fecha_edit in st.session_state.bitacora:
-            secciones_disp = ["Plantas Grandes"]
-            if st.session_state.config["usar_esquejes"]: secciones_disp.append("Esquejes")
-            tipo = st.radio("Sección:", secciones_disp)
-            lista_target = "tareas_madre" if tipo == "Plantas Grandes" else "tareas_esqueje"
-            done_target = "done_m" if tipo == "Plantas Grandes" else "done_e"
-            if st.session_state.bitacora[fecha_edit][lista_target]:
-                idx_tarea = st.selectbox("Selecciona tarea:", range(len(st.session_state.bitacora[fecha_edit][lista_target])), format_func=lambda x: st.session_state.bitacora[fecha_edit][lista_target][x])
-                texto_nuevo = st.text_input("Texto (vacío para eliminar):", value=st.session_state.bitacora[fecha_edit][lista_target][idx_tarea])
-                col_e1, col_e2 = st.columns(2)
-                with col_e1:
-                    if st.button("💾 Actualizar", use_container_width=True):
-                        if texto_nuevo.strip() == "":
-                            st.session_state.bitacora[fecha_edit][lista_target].pop(idx_tarea)
-                            st.session_state.bitacora[fecha_edit][done_target].pop(idx_tarea)
-                            if not st.session_state.bitacora[fecha_edit].get("tareas_madre") and not st.session_state.bitacora[fecha_edit].get("tareas_esqueje") and "ph_in" not in st.session_state.bitacora[fecha_edit]:
-                                del st.session_state.bitacora[fecha_edit]
-                        else: st.session_state.bitacora[fecha_edit][lista_target][idx_tarea] = texto_nuevo
-                        guardar_datos(); st.rerun()
-                with col_e2:
-                    if st.button("❌ Cancelar", use_container_width=True): st.session_state.menu_action = None; st.rerun()
-            else: st.warning("No hay tareas en esta sección.")
-        else: st.info("No hay tareas.")
-        st.write("---")
-
     elif st.session_state.menu_action == "planificar":
-        st.markdown("### ✏️ Planificar Nueva Tarea")
-        fecha_ingresada = st.date_input("Fecha:", value=st.session_state.selected_date)
-        secciones_disp = ["Plantas Grandes"]
-        if st.session_state.config["usar_esquejes"]: secciones_disp.append("Esquejes")
-        tipo_tarea = st.selectbox("Sección:", secciones_disp)
-        nueva_tarea = st.text_input("Tarea:")
+        st.markdown("### ✏️ PLANIFICAR NUEVA TAREA")
+        # CORREGIDO: Texto limpio de fecha sin barra horizontal
+        st.markdown(f"**SECCIÓN SELECCIONADA:** {st.session_state.selected_date.strftime('%d/%m/%Y')}")
+        fecha_ingresada = st.session_state.selected_date
+        
+        # CORREGIDO: Unificación estética usando botones circulares (radio) en vez de selectbox
+        secciones_disp = ["Plantas Grandes", "Esquejes"] if st.session_state.config["usar_esquejes"] else ["Plantas Grandes"]
+        tipo_tarea = st.radio("Sección a planificar:", secciones_disp, horizontal=True)
+        nueva_tarea = st.text_input("Descripción de la tarea:")
+        
         cb1, cb2 = st.columns(2)
         with cb1:
-            if st.button("💾 Guardar Tarea", use_container_width=True):
+            if st.button("💾 GUARDAR TAREA", use_container_width=True):
                 if fecha_ingresada not in st.session_state.bitacora:
                     st.session_state.bitacora[fecha_ingresada] = {"tareas_madre": [], "tareas_esqueje": [], "done_m": [], "done_e": []}
                 if tipo_tarea == "Plantas Grandes":
@@ -234,20 +215,59 @@ with col_main:
                 else:
                     st.session_state.bitacora[fecha_ingresada]["tareas_esqueje"].append(nueva_tarea)
                     st.session_state.bitacora[fecha_ingresada]["done_e"].append(False)
-                guardar_datos(); st.rerun()
+                guardar_datos(); st.session_state.menu_action = None; st.rerun() # CORREGIDO: Cierra la opción automáticamente al guardar
         with cb2:
-            if st.button("❌ Cerrar", use_container_width=True): st.session_state.menu_action = None; st.rerun()
+            if st.button("❌ CERRAR", use_container_width=True): st.session_state.menu_action = None; st.rerun()
+        st.write("---")
+
+    elif st.session_state.menu_action == "editar":
+        st.markdown("### 📝 MODIFICAR O ELIMINAR TAREA")
+        st.markdown(f"**SECCIÓN SELECCIONADA:** {st.session_state.selected_date.strftime('%d/%m/%Y')}")
+        fecha_edit = st.session_state.selected_date
+        
+        if fecha_edit in st.session_state.bitacora:
+            secciones_disp = ["Plantas Grandes", "Esquejes"] if st.session_state.config["usar_esquejes"] else ["Plantas Grandes"]
+            tipo = st.radio("Sección a modificar:", secciones_disp, horizontal=True)
+            lista_target = "tareas_madre" if tipo == "Plantas Grandes" else "tareas_esqueje"
+            done_target = "done_m" if tipo == "Plantas Grandes" else "done_e"
+            
+            tareas_lista = st.session_state.bitacora[fecha_edit][lista_target]
+            if tareas_lista:
+                st.markdown("**Selecciona la tarea haciendo clic en su botón:**")
+                # CORREGIDO: Se quita la barra desplegable, se lista como botones directos con tilde verde ✔️
+                for idx, t_text in enumerate(tareas_lista):
+                    label_boton = f"✔️ {t_text}" if st.session_state.idx_tarea_editar == idx else t_text
+                    if st.button(label_boton, key=f"btn_list_{idx}", use_container_width=True):
+                        st.session_state.idx_tarea_editar = idx
+                
+                if st.session_state.idx_tarea_editar is not None and st.session_state.idx_tarea_editar < len(tareas_lista):
+                    idx_sel = st.session_state.idx_tarea_editar
+                    texto_nuevo = st.text_input("Modifica el texto seleccionado (vacío para eliminar):", value=tareas_lista[idx_sel])
+                    col_e1, col_e2 = st.columns(2)
+                    with col_e1:
+                        if st.button("💾 ACTUALIZAR", use_container_width=True):
+                            if texto_nuevo.strip() == "":
+                                st.session_state.bitacora[fecha_edit][lista_target].pop(idx_sel)
+                                st.session_state.bitacora[fecha_edit][done_target].pop(idx_sel)
+                                if not st.session_state.bitacora[fecha_edit].get("tareas_madre") and not st.session_state.bitacora[fecha_edit].get("tareas_esqueje") and "ph_in" not in st.session_state.bitacora[fecha_edit]:
+                                    del st.session_state.bitacora[fecha_edit]
+                            else: st.session_state.bitacora[fecha_edit][lista_target][idx_sel] = texto_nuevo
+                            st.session_state.idx_tarea_editar = None; guardar_datos(); st.rerun()
+                    with col_e2:
+                        if st.button("❌ CANCELAR", use_container_width=True): st.session_state.menu_action = None; st.rerun()
+            else: st.warning("No hay tareas en esta sección.")
+        else: st.info("No hay tareas.")
         st.write("---")
 
     hoy = datetime.date.today()
     meses_nombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-    st.markdown(f"<h2 style='text-align: center; color: #333;'>📅 {meses_nombres[hoy.month - 1]} {hoy.year}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: #333;'>📅 {meses_nombres[hoy.month - 1].upper()} {hoy.year}</h2>", unsafe_allow_html=True)
     
     cal = calendar.Calendar(firstweekday=0)
     semanas_mes = cal.monthdatescalendar(hoy.year, hoy.month)
     
-    dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
     cols_header = st.columns(7)
+    dias_semana = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"]
     for idx, nombre_dia in enumerate(dias_semana):
         cols_header[idx].markdown(f"<p style='text-align:center; font-weight:600; margin-bottom:5px;'>{nombre_dia}</p>", unsafe_allow_html=True)
     
@@ -256,13 +276,16 @@ with col_main:
         for idx, fecha in enumerate(b_semana):
             col_target = cols_dias[idx]
             if fecha.month == hoy.month:
-                tiene_tarea = fecha in st.session_state.bitacora and (len(st.session_state.bitacora[fecha].get("tareas_madre", [])) > 0 or len(st.session_state.bitacora[fecha].get("tareas_esqueje", [])) > 0)
-                tiene_medicion = fecha in st.session_state.bitacora and "ph_in" in st.session_state.bitacora[fecha]
+                # CORREGIDO: Lógica del semáforo inteligente de colores (Verde=Grandes, Azul=Esquejes, 50/50=Ambos)
+                tiene_m = fecha in st.session_state.bitacora and len(st.session_state.bitacora[fecha].get("tareas_madre", [])) > 0
+                tiene_e = fecha in st.session_state.bitacora and (len(st.session_state.bitacora[fecha].get("tareas_esqueje", [])) > 0 or "ph_in" in st.session_state.bitacora[fecha])
                 with col_target:
                     if st.button(f"{fecha.day}", key=f"day_{fecha.day}_{fecha.month}_{idx}", use_container_width=True):
                         st.session_state.selected_date = fecha
-                    if tiene_tarea: st.markdown("<div style='background-color:#A5D6A7; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
-                    elif tiene_medicion: st.markdown("<div style='background-color:#BBDEFB; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
+                    if tiene_m and tiene_e:
+                        st.markdown("<div style='display:flex; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'><div style='background-color:#A5D6A7; flex:1;'></div><div style='background-color:#BBDEFB; flex:1;'></div></div>", unsafe_allow_html=True)
+                    elif tiene_m: st.markdown("<div style='background-color:#A5D6A7; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
+                    elif tiene_e: st.markdown("<div style='background-color:#BBDEFB; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
                     else: st.markdown("<div style='height:5px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
             else:
                 with col_target: st.write("")
@@ -270,11 +293,11 @@ with col_main:
     if st.session_state.selected_date:
         fecha_sel = st.session_state.selected_date
         st.write("---")
-        st.markdown(f"### 📋 Registros del Día: {fecha_sel.strftime('%d/%m/%Y')}")
+        st.markdown(f"### 📋 REGISTROS DEL DÍA: {fecha_sel.strftime('%d/%m/%Y')}")
         if fecha_sel in st.session_state.bitacora:
             data_dia = st.session_state.bitacora[fecha_sel]
             if "ph_in" in data_dia:
-                st.markdown(f"📊 **Mediciones:** Entrada: pH {data_dia['ph_in']} / EC {data_dia['ec_in']} | Salida: pH {data_dia['ph_out']} / EC {data_dia['ec_out']}")
+                st.markdown(f"📊 **MEDICIONES:** Entrada: pH {data_dia['ph_in']} / EC {data_dia['ec_in']} | Salida: pH {data_dia['ph_out']} / EC {data_dia['ec_out']}")
             if st.session_state.config["usar_esquejes"]:
                 col_madres, col_clones = st.columns(2)
                 with col_madres:
@@ -294,6 +317,6 @@ with col_main:
                 else: st.caption("Sin tareas.")
             st.session_state.bitacora[fecha_sel] = data_dia; guardar_datos()
         else: st.info("Día sin registros.")
-        if st.button("❌ Cerrar Tarjeta", use_container_width=True):
+        if st.button("❌ CERRAR TARJETA", use_container_width=True):
             st.session_state.selected_date = datetime.date.today(); st.rerun()
 
