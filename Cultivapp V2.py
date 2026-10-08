@@ -39,7 +39,7 @@ if "bitacora" not in st.session_state:
 if "fase" not in st.session_state:
     st.session_state.fase = datos_guardados.get("fase", "Vegetativo")
 if "selected_date" not in st.session_state:
-    st.session_state.selected_date = None
+    st.session_state.selected_date = datetime.date.today()
 if "menu_action" not in st.session_state:
     st.session_state.menu_action = None
 if "ver_calendario" not in st.session_state:
@@ -96,8 +96,7 @@ if not st.session_state.ver_calendario:
         else: st.caption("No hay ningún calendario guardado.")
     st.stop()
 
-# CORREGIDO: Se aplica la lista [1, 4] para fijar la proporción estricta 20/80 en pantalla
-col_menu, col_main = st.columns([1, 4])
+col_menu, col_main = st.columns([2, 8])
 
 with col_menu:
     st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza']}</div>", unsafe_allow_html=True)
@@ -154,11 +153,12 @@ with col_main:
 
     elif st.session_state.menu_action == "mediciones":
         st.markdown("### 📊 Registro de Mediciones (Modo Bitácora)")
-        fecha_med = st.date_input("Fecha de medición:", datetime.date.today())
-        if fecha_med not in st.session_state.bitacora:
-            st.session_state.bitacora[fecha_med] = {"tareas_madre": [], "tareas_esqueje": [], "done_m": [], "done_e": [], "ph_in": 6.2, "ph_out": 6.2, "ec_in": 330, "ec_out": 700}
+        # Sincronizado dinámicamente con el día clickeado del calendario
+        fecha_med = st.date_input("Fecha de medición:", value=st.session_state.selected_date)
         
-        med = st.session_state.bitacora[fecha_med]
+        med_existente = fecha_med in st.session_state.bitacora and "ph_in" in st.session_state.bitacora[fecha_med]
+        med = st.session_state.bitacora[fecha_med] if fecha_med in st.session_state.bitacora else {}
+        
         col_m1, col_m2 = st.columns(2)
         with col_m1:
             ph_in = st.number_input("pH de Entrada:", value=float(med.get("ph_in", 6.2)), step=0.1)
@@ -170,17 +170,27 @@ with col_main:
         col_sm1, col_sm2 = st.columns(2)
         with col_sm1:
             if st.button("💾 Guardar Mediciones", use_container_width=True):
+                if fecha_med not in st.session_state.bitacora:
+                    st.session_state.bitacora[fecha_med] = {"tareas_madre": [], "tareas_esqueje": [], "done_m": [], "done_e": []}
                 st.session_state.bitacora[fecha_med]["ph_in"] = ph_in; st.session_state.bitacora[fecha_med]["ph_out"] = ph_out
                 st.session_state.bitacora[fecha_med]["ec_in"] = ec_in; st.session_state.bitacora[fecha_med]["ec_out"] = ec_out
-                guardar_datos(); st.success("¡Mediciones guardadas permanentemente!"); st.rerun()
+                guardar_datos(); st.success("¡Mediciones guardadas!"); st.rerun()
         with col_sm2:
-            if st.button("❌ Cerrar", key="c_med", use_container_width=True):
-                st.session_state.menu_action = None; st.rerun()
+            if med_existente:
+                if st.button("💥 Eliminar Registro", use_container_width=True):
+                    for k in ["ph_in", "ph_out", "ec_in", "ec_out"]:
+                        if k in st.session_state.bitacora[fecha_med]: del st.session_state.bitacora[fecha_med][k]
+                    if not st.session_state.bitacora[fecha_med].get("tareas_madre") and not st.session_state.bitacora[fecha_med].get("tareas_esqueje"):
+                        del st.session_state.bitacora[fecha_med]
+                    guardar_datos(); st.success("¡Mediciones eliminadas!"); st.rerun()
+            else:
+                if st.button("❌ Cerrar", key="c_med", use_container_width=True):
+                    st.session_state.menu_action = None; st.rerun()
         st.write("---")
 
     elif st.session_state.menu_action == "editar":
         st.markdown("### 📝 Modificar o Eliminar Tarea")
-        fecha_edit = st.date_input("Fecha:", datetime.date.today())
+        fecha_edit = st.date_input("Fecha:", value=st.session_state.selected_date)
         if fecha_edit in st.session_state.bitacora:
             secciones_disp = ["Plantas Grandes"]
             if st.session_state.config["usar_esquejes"]: secciones_disp.append("Esquejes")
@@ -196,6 +206,8 @@ with col_main:
                         if texto_nuevo.strip() == "":
                             st.session_state.bitacora[fecha_edit][lista_target].pop(idx_tarea)
                             st.session_state.bitacora[fecha_edit][done_target].pop(idx_tarea)
+                            if not st.session_state.bitacora[fecha_edit].get("tareas_madre") and not st.session_state.bitacora[fecha_edit].get("tareas_esqueje") and "ph_in" not in st.session_state.bitacora[fecha_edit]:
+                                del st.session_state.bitacora[fecha_edit]
                         else: st.session_state.bitacora[fecha_edit][lista_target][idx_tarea] = texto_nuevo
                         guardar_datos(); st.rerun()
                 with col_e2:
@@ -206,7 +218,7 @@ with col_main:
 
     elif st.session_state.menu_action == "planificar":
         st.markdown("### ✏️ Planificar Nueva Tarea")
-        fecha_ingresada = st.date_input("Fecha:", datetime.date.today())
+        fecha_ingresada = st.date_input("Fecha:", value=st.session_state.selected_date)
         secciones_disp = ["Plantas Grandes"]
         if st.session_state.config["usar_esquejes"]: secciones_disp.append("Esquejes")
         tipo_tarea = st.selectbox("Sección:", secciones_disp)
@@ -283,5 +295,5 @@ with col_main:
             st.session_state.bitacora[fecha_sel] = data_dia; guardar_datos()
         else: st.info("Día sin registros.")
         if st.button("❌ Cerrar Tarjeta", use_container_width=True):
-            st.session_state.selected_date = None; st.rerun()
+            st.session_state.selected_date = datetime.date.today(); st.rerun()
 
