@@ -53,7 +53,6 @@ st.markdown("""
     .header-banner { background-color: #FAFAFA; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #E0E0E0; font-weight: bold; color: #333; margin-bottom: 15px; }
     </style>
 """, unsafe_allow_html=True)
-
 if not st.session_state.ver_calendario:
     st.markdown("### 🪴 Configuración del Cultivo (Alpha 4.2)")
     col_ini1, col_ini2 = st.columns(2)
@@ -96,8 +95,7 @@ if not st.session_state.ver_calendario:
         else: st.caption("No hay ningún calendario guardado.")
     st.stop()
 
-col_menu, col_main = st.columns([1, 4]) # Proporción estricta de pantalla 20/80
-
+col_menu, col_main = st.columns()
 with col_menu:
     st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza']}</div>", unsafe_allow_html=True)
     if st.button("🏠 Inicio", use_container_width=True):
@@ -107,7 +105,7 @@ with col_menu:
         st.session_state.menu_action = "planificar"
     if st.button("📝 Editar Tareas", use_container_width=True):
         st.session_state.menu_action = "editar"
-    if st.button("📊 Reg. Mediciones", use_container_width=True): # Nuevo Botón Bitácora
+    if st.button("📊 Reg. Mediciones", use_container_width=True):
         st.session_state.menu_action = "mediciones"
     if st.button("📖 Info Raza", use_container_width=True):
         st.session_state.menu_action = "info"
@@ -149,7 +147,6 @@ with col_main:
             st.write(f"**Semanas {sem_e} (Engorde):**\n- **Clima:** Temp: 20°C-25°C | Humedad: 40%-50%\n- **Distancia Luz:** A {dist_lamp} de las puntas.\n- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza.")
         if st.button("❌ Cerrar Info", use_container_width=True):
             st.session_state.menu_action = None; st.rerun()
-
     elif st.session_state.menu_action == "mediciones":
         st.markdown("### 📊 Registro de Mediciones (Modo Bitácora)")
         fecha_med = st.date_input("Fecha de medición:", datetime.date.today())
@@ -225,7 +222,6 @@ with col_main:
             if st.button("❌ Cerrar", use_container_width=True): st.session_state.menu_action = None; st.rerun()
         st.write("---")
 
-    # CALENDARIO DE GOOGLE CALENDAR AUTOMÁTICO Y REAL DE 5 SEMANAS
     hoy = datetime.date.today()
     meses_nombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
     st.markdown(f"<h2 style='text-align: center; color: #333;'>📅 {meses_nombres[hoy.month - 1]} {hoy.year}</h2>", unsafe_allow_html=True)
@@ -236,11 +232,8 @@ with col_main:
     dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
     cols_header = st.columns(7)
     for idx, nombre_dia in enumerate(dias_semana):
-        cols_header[idx].markdown(f"<p style='text-align:center; font-weight:600; margin-bottom:5px;'>{nombre_dia}</p>', unsafe_allow_html=True)
+        cols_header[idx].markdown(f"<p style='text-align:center; font-weight:600; margin-bottom:5px;'>{nombre_dia}</p>", unsafe_allow_html=True)
     
-    accent_color_fase = "#A5D6A7" if st.session_state.fase == "Vegetativo" else "#CE93D8"
-    
-    # Renderizado dinámico de las 5 o 6 semanas completas del mes real
     for semana in semanas_mes:
         cols_dias = st.columns(7)
         for idx, fecha in enumerate(semana):
@@ -251,7 +244,7 @@ with col_main:
                 with col_target:
                     if st.button(f"{fecha.day}", key=f"day_{fecha.day}_{fecha.month}_{idx}", use_container_width=True):
                         st.session_state.selected_date = fecha
-                    if tiene_tarea: st.markdown(f"<div style='background-color:{accent_color_fase}; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
+                    if tiene_tarea: st.markdown(f"<div style='background-color:#A5D6A7; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
                     elif tiene_medicion: st.markdown(f"<div style='background-color:#BBDEFB; height:5px; border-radius:2px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
                     else: st.markdown("<div style='height:5px; margin-top:-5px; margin-bottom:10px;'></div>", unsafe_allow_html=True)
             else:
@@ -263,10 +256,8 @@ with col_main:
         st.markdown(f"### 📋 Registros del Día: {fecha_sel.strftime('%d/%m/%Y')}")
         if fecha_sel in st.session_state.bitacora:
             data_dia = st.session_state.bitacora[fecha_sel]
-            
             if "ph_in" in data_dia:
-                st.markdown(f"📊 **Mediciones registradas:** Entrada: pH {data_dia['ph_in']} / EC {data_dia['ec_in']} | Salida: pH {data_dia['ph_out']} / EC {data_dia['ec_out']}")
-            
+                st.markdown(f"📊 **Mediciones:** Entrada: pH {data_dia['ph_in']} / EC {data_dia['ec_in']} | Salida: pH {data_dia['ph_out']} / EC {data_dia['ec_out']}")
             if st.session_state.config["usar_esquejes"]:
                 col_madres, col_clones = st.columns(2)
                 with col_madres:
