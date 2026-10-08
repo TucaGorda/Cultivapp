@@ -53,6 +53,7 @@ st.markdown("""
     .header-banner { background-color: #FAFAFA; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #E0E0E0; font-weight: bold; color: #333; margin-bottom: 15px; }
     </style>
 """, unsafe_allow_html=True)
+
 if not st.session_state.ver_calendario:
     st.markdown("### 🪴 Configuración del Cultivo (Alpha 4.2)")
     col_ini1, col_ini2 = st.columns(2)
@@ -96,6 +97,7 @@ if not st.session_state.ver_calendario:
     st.stop()
 
 col_menu, col_main = st.columns()
+
 with col_menu:
     st.markdown(f"<div class='header-banner'>🧬 {st.session_state.config['raza']}</div>", unsafe_allow_html=True)
     if st.button("🏠 Inicio", use_container_width=True):
@@ -147,6 +149,7 @@ with col_main:
             st.write(f"**Semanas {sem_e} (Engorde):**\n- **Clima:** Temp: 20°C-25°C | Humedad: 40%-50%\n- **Distancia Luz:** A {dist_lamp} de las puntas.\n- **Agua (15%):** {agua_flo2:.1f}L\n- **pH:** 6.3-6.5 | **EC:** 1.3-1.6\n- **Nutrientes:** Máximo P + K + Melaza.")
         if st.button("❌ Cerrar Info", use_container_width=True):
             st.session_state.menu_action = None; st.rerun()
+
     elif st.session_state.menu_action == "mediciones":
         st.markdown("### 📊 Registro de Mediciones (Modo Bitácora)")
         fecha_med = st.date_input("Fecha de medición:", datetime.date.today())
@@ -279,3 +282,4 @@ with col_main:
         else: st.info("Día sin registros.")
         if st.button("❌ Cerrar Tarjeta", use_container_width=True):
             st.session_state.selected_date = None; st.rerun()
+
